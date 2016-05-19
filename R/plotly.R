@@ -271,6 +271,8 @@ plotly_build.gg <- function(l = last_plot()) {
 
 #' @export
 plotly_build.plotly_hash <- function(l = last_plot()) {
+  message('Starting plotly_hash()...')
+  start_ptm <- proc.time()
   l <- get_plot(l)
   # assume unnamed list elements are data/traces
   nms <- names(l)
@@ -337,6 +339,8 @@ plotly_build.plotly_hash <- function(l = last_plot()) {
       }
 
       # define the dat traces
+      trfy_ptm <- proc.time()
+      message('Start tracing...')
       points_df <- data.frame(dat_index = seq_along(dat[["x"]] %||% dat[["y"]] %||% dat[["z"]])) %>% # indices of the original data elements used in the trace FIXME properly define data length
         tracify_by_color(dat) %>%
         tracify_by_column(dat, "symbol", force_numeric=TRUE) %>%
@@ -371,6 +375,8 @@ plotly_build.plotly_hash <- function(l = last_plot()) {
         trace_point_indices <- list(as.integer())
         trace_dat_indices <- list(points_df$dat_index)
       }
+      message('Tracing took ')
+      print(proc.time() - trfy_ptm)
 
       # assign trace names
       names(trace_point_indices) <- sapply(trace_point_indices, function(point_indices){
@@ -410,7 +416,12 @@ plotly_build.plotly_hash <- function(l = last_plot()) {
             trace
          })
       }
-      generate_traces(dat, max(points_df$dat_index, na.rm=TRUE), trace_dat_indices, trace_brushes)
+      gen_tr_ptm <- proc.time()
+      message('generate_trace()...')
+      gen_traces <- generate_traces(dat, max(points_df$dat_index, na.rm=TRUE), trace_dat_indices, trace_brushes)
+      message('generate_trace() took ')
+      print(proc.time() - trfy_ptm)
+      gen_traces
     } else {
       list(d)
     }
@@ -450,6 +461,8 @@ plotly_build.plotly_hash <- function(l = last_plot()) {
       x$layout$hovermode <- x$layout$hovermode %||% "closest"
   }
   # add plotly class mainly for printing method
+  message('plotly_hash() done, elapsed=')
+  print(proc.time() - start_ptm)
   structure(x, class = unique("plotly_built", class(x)))
 }
 
