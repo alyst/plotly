@@ -247,8 +247,8 @@ get_domains <- function(nplots = 1, nrows = 1, margins = 0.01,
   if (length(margins) == 1) margins <- rep(margins, 4)
   if (length(margins) != 4) stop("margins must be length 1 or 4", call. = FALSE)
   ncols <- ceiling(nplots / nrows)
-  widths <- widths %||% rep((1 - sum(margins[1:2])*(ncols-1)) / ncols, ncols)
-  heights <- heights %||% rep((1 - sum(margins[3:4])*(nrows-1)) / nrows, nrows)
+  widths <- widths %||% rep(1 / ncols, ncols)
+  heights <- heights %||% rep(1 / nrows, nrows)
   if (length(widths) != ncols) {
     stop("The length of the widths argument must be equal ",
          "to the number of columns", call. = FALSE)
@@ -263,19 +263,30 @@ get_domains <- function(nplots = 1, nrows = 1, margins = 0.01,
   if (any(widths < 0) || any(heights < 0)) {
     stop("The widths and heights arguments must contain positive values")
   }
-  total_width <- sum(widths)+sum(margins[1:2])*(ncols-1)
-  total_height <- sum(heights)+sum(margins[3:4])*(nrows-1)
+  margins_width <- sum(margins[1:2])*(ncols-1)
+  if (margins_width >= 1.0) stop("The total width of margins should be less than 1.0, reduce margin[1:2]")
+  margins_height <- sum(margins[3:4])*(nrows-1)
+  if (margins_height >= 1.0) stop("The total height of margins should be less than 1.0, reduce margin[3:4]")
+  # if needed, rescale subplot widths and heights to fit in 0..1 range
+  total_width <- sum(widths) + margins_width
+  if (total_width > 1.0) {
+    widths <- widths/sum(widths)*(1.0 - margins_width)
+    total_width <- 1.0
+  }
+  total_height <- sum(heights) + margins_height
+  if (total_height > 1.0) {
+    heights <- heights/sum(heights)*(1.0 - margins_height)
+    total_height <- 1.0
+  }
 
-  # panel offsets centered within the margins
-  xscale <- 1/max(1, total_width)
-  yscale <- 1/max(1, total_height)
-  xstarts <- (cumsum(c(0, widths[-length(widths)]+sum(margins[1:2]))) + max(0, 1-total_width)/2)*xscale
-  ystarts <- (cumsum(c(0, heights[-length(heights)]+sum(margins[3:4]))) + max(0, 1-total_height)/2)*yscale
+  # panel offsets (centered in the whole plot) 
+  xstarts <- c(0, cumsum(widths[-length(widths)]+sum(margins[1:2]))) + (1-total_width)/2
+  ystarts <- c(0, cumsum(heights[-length(heights)]+sum(margins[3:4]))) + (1-total_height)/2
 
   data.frame(xstart = rep_len(xstarts, nplots),
-             xend = rep_len(xstarts+widths*xscale, nplots),
+             xend = pmin(1.0, rep_len(xstarts+widths, nplots)),
              ystart = rep(1-ystarts, each=ncols, length.out=nplots),
-             yend = rep(1-ystarts-heights*yscale, each=ncols, length.out=nplots))
+             yend = pmax(0.0, rep(1-ystarts-heights, each=ncols, length.out=nplots)))
 }
 
 list2df <- function(x, nms) {
