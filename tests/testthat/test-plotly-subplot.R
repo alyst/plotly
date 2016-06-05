@@ -78,16 +78,17 @@ scatter <- ggplot(d) + geom_point(aes(x = x, y = y))
 hist_right <- ggplot(d) + geom_histogram(aes(x = y)) + coord_flip()
 s <- subplot(
   hist_top, empty, scatter, hist_right, 
-  nrows = 2, widths = c(0.8, 0.2), heights = c(0.2, 0.8),
+  nrows = 2, widths = c(0.5, 0.3, 0.2), heights = c(0.4, 0.6),
   margin = 0.005, shareX = TRUE, shareY = TRUE
 )
 
 test_that("Row/column height/width", {
   l <- expect_traces(s, 3, "width-height")
-  expect_equal(diff(l$layout$xaxis$domain), 0.8 - 0.005)
-  expect_equal(diff(l$layout$xaxis2$domain), 0.2 - 0.005)
-  expect_equal(diff(l$layout$yaxis$domain), 0.2 - 0.005)
-  expect_equal(diff(l$layout$yaxis2$domain), 0.8 - 0.005)
+  expect_equal(diff(l$layout$xaxis$domain), 0.5/1.02)
+  expect_equal(diff(l$layout$xaxis2$domain), 0.3/1.02)
+  expect_equal(diff(l$layout$xaxis3$domain), 0.2/1.02)
+  expect_equal(diff(l$layout$yaxis$domain), 0.4/1.01)
+  expect_equal(diff(l$layout$yaxis2$domain), 0.6/1.01)
 })
 
 test_that("recursive subplots work", {
