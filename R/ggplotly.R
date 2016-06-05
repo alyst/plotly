@@ -346,10 +346,12 @@ gg2list <- function(p, width = NULL, height = NULL, tooltip = "all", source = "A
         bbox(lab, axisTextY$angle, unitConvert(axisTextY, "npc", "width"))[["width"]]
     }
   }
-  # FIXME left/right top/left subplot margins are summed in get_domains(), do we need them both?
+  # FIXME left/right top/left subplot margins are summed in get_domains, do we need them both?
+  # FIXME using rep() gives double-sized margins in dom, but somehow this bug is covered by
+  #       the same effect as offset hack below
   margins <- c(
-    rep(panelMarginX/2, 2),
-    rep(panelMarginY/2, 2)
+    rep(panelMarginX, 2),
+    rep(panelMarginY, 2)
   )
   doms <- get_domains(nPanels, nRows, margins)
 
