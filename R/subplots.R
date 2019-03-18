@@ -350,6 +350,48 @@ ensure_one <- function(plots, attr) {
   attrs[[length(attrs)]]
 }
 
+# helper function returning the data frame with the axes information
+# for the plotly object "p"
+get_axes_info <- function(p) {
+  axes <- p$layout[grepl("^geo|^mapbox|^[xy]axis", names(p$layout))]
+  res <- dplyr::tibble(
+    name = names(axes),
+    type = sapply(axes, function(ax) ax$type %||% NA_character_),
+    axis_index = seq_along(axes), # position in the axes list
+    title = sapply(axes, function(ax) ax$title %||% NA_character_),
+    anchor = sapply(axes, function(ax) ax$anchor %||% NA_character_),
+    range_start = sapply(axes, function(ax) ax$range[[1]] %||% NA_real_),
+    range_end = sapply(axes, function(ax) ax$range[[2]] %||% NA_real_)
+  ) %>% dplyr::mutate(
+    dim = sub("(?:axis)?[0-9]*$", "", name), # x or y
+    # axis index within its dimension
+    dim_index = sub("^[^0-9]*", "", name),
+    # ref is how the axis is referenced by the trace or by another axis as its anchor
+    # NOTE: index=1 is omitted
+    ref = paste0(dim, dim_index), # same as name but with "axis" omitted
+    dim_index = dplyr::if_else(dim_index == "", 1L, as.integer(dim_index))
+  )
+  # axis domain(s)
+  extract_domain <- function(axis_ix, dim, dom_ix) {
+    axis <- axes[[axis_ix]]
+    if (res$dim[[axis_ix]] == dim) { # x or y axis
+      axis$domain[[dom_ix]] %||% ifelse(dom_ix == 1, 0.0, 1.0)
+    } else if (dim %in% names(axis$domain)) { # geo has both x and y domains
+      dimdom_ix = ifelse(dim =="x", dom_ix, 3L - dom_ix)
+      axis$domain[[dim]][[dimdom_ix]] %||% ifelse(dom_ix, 0.0, 1.0)
+    } else {
+      NA_real_
+    }
+  }
+  res <- dplyr::mutate(res,
+    xstart = sapply(res$axis_index, extract_domain, "x", 1),
+    xend = sapply(res$axis_index, extract_domain, "x", 2),
+    ystart = sapply(res$axis_index, extract_domain, "y", 1),
+    yend = sapply(res$axis_index, extract_domain, "y", 2)
+  )
+
+  return(res)
+}
 
 # helper function returning the domains (positions) for the subplots
 # in the grid layout
