@@ -188,7 +188,7 @@ subplot <- function(..., nrows = 1, widths = NULL, heights = NULL, margin = 0.02
   xAxisMap <- split(xAxisMap, rep(seq_along(plots), xAxisN))
   yAxisMap <- split(yAxisMap, rep(seq_along(plots), yAxisN))
   # domains of each subplot
-  domainInfo <- get_domains(
+  domainInfo <- get_grid_layout(
     length(plots), nrows, margin, widths = widths, heights = heights
   )
   for (i in seq_along(plots)) {
@@ -351,8 +351,10 @@ ensure_one <- function(plots, attr) {
 }
 
 
-get_domains <- function(nplots = 1, nrows = 1, margins = 0.01, 
-                        widths = NULL, heights = NULL) {
+# helper function returning the domains (positions) for the subplots
+# in the grid layout
+get_grid_layout <- function(nplots = 1, nrows = 1, margins = 0.01,
+                            widths = NULL, heights = NULL) {
   if (length(margins) == 1) margins <- rep(margins, 4)
   if (length(margins) != 4) stop("margins must be length 1 or 4", call. = FALSE)
   ncols <- ceiling(nplots / nrows)
@@ -396,7 +398,10 @@ get_domains <- function(nplots = 1, nrows = 1, margins = 0.01,
   dplyr::tibble(xstart = rep_len(xstarts, nplots),
                 xend = pmin(1.0, rep_len(xstarts+widths, nplots)),
                 ystart = pmax(0.0, rep(1-ystarts-heights, each=ncols, length.out=nplots)),
-                yend = rep(1-ystarts, each=ncols, length.out=nplots))
+                yend = rep(1-ystarts, each=ncols, length.out=nplots),
+                plot_index = seq.int(nplots),
+                col = rep(seq.int(ncols), nrows, length.out=nplots),
+                row = rep(seq.int(nrows), each=ncols, length.out=nplots))
 }
 
 list2df <- function(x, nms) {

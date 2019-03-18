@@ -542,7 +542,7 @@ gg2list <- function(p, width = NULL, height = NULL,
   # ------------------------------------------------------------------------
   
   # panel margins must be computed before panel/axis loops
-  # (in order to use get_domains())
+  # (in order to use get_grid_layout())
   panelMarginX <- unitConvert(
     theme[["panel.spacing.x"]] %||% theme[["panel.spacing"]],
     "npc", "width"
@@ -588,7 +588,7 @@ gg2list <- function(p, width = NULL, height = NULL,
     rep(panelMarginX, 2),
     rep(panelMarginY, 2)
   )
-  doms <- get_domains(nPanels, nRows, margins)
+  doms <- get_grid_layout(nPanels, nRows, margins)
   
   for (i in seq_len(nPanels)) {
     lay <- layout$layout[i, ]
