@@ -119,6 +119,12 @@ subplot <- function(..., nrows = 1, widths = NULL, heights = NULL, margin = 0.02
   # set the domain(position) of each subplot in a grid layout
   plots_info <- get_grid_layout(
     length(plots), nrows, margin, widths = widths, heights = heights
+  ) %>% mutate(
+    subplot_index = 1L,
+    # bind all shapes, images and annotations to the only subplot of each plot
+    shape_indices = lapply(plots, function(p) seq_along(p$layout$shapes)),
+    image_indices = lapply(plots, function(p) seq_along(p$layout$images)),
+    annotation_indices = lapply(plots, function(p) seq_along(p$layout$annotations))
   )
 
   # collect subplots axes information
@@ -137,6 +143,8 @@ subplot <- function(..., nrows = 1, widths = NULL, heights = NULL, margin = 0.02
                   new_xend = dplyr::if_else(dim == "y", NA_real_, new_xend),
                   new_ystart = dplyr::if_else(dim == "x", NA_real_, new_ystart),
                   new_yend = dplyr::if_else(dim == "x", NA_real_, new_yend))
+  # strip domain information from the subplots
+  plots_info <- dplyr::select(plots_info, -xstart, -xend, -ystart, -yend)
 
   # number of x/y axes per plot
   # note: a _single_ geo/mapbox object counts a both an x and y
@@ -312,11 +320,18 @@ merge_plots <- function(plots, plots_info, axes_info, which_layout = "merge") {
     }
 
     # reposition plot shapes, annotations and images
-    xTrf <- get_axis_transform(plot_info, "x")
-    yTrf <- get_axis_transform(plot_info, "y")
-    shapes[[i]] <- lapply(shapes[[i]], reposition, xTrf, yTrf)
-    annotations[[i]] <- lapply(annotations[[i]], reposition, xTrf, yTrf)
-    images[[i]] <- lapply(images[[i]], reposition, xTrf, yTrf)
+    plot_subplots_info <- dplyr::filter(plots_info, plot_index==i)
+    for (j in plot_subplots_info$subplot_index) {
+      subplot_info <- subset(plot_subplots_info, subplot_index==j)
+      xTrf <- get_axis_transform(subplot_info, "x")
+      yTrf <- get_axis_transform(subplot_info, "y")
+      shape_ixs <- subplot_info$shape_indices[[1]]
+      if (length(shape_ixs)) shapes[[i]][shape_ixs] <- lapply(shapes[[i]][shape_ixs], reposition, xTrf, yTrf)
+      ann_ixs <- subplot_info$annotation_indices[[1]]
+      if (length(ann_ixs)) annotations[[i]][ann_ixs] <- lapply(annotations[[i]][ann_ixs], reposition, xTrf, yTrf)
+      image_ixs <- subplot_info$image_indices[[1]]
+      if (length(image_ixs)) images[[i]][image_ixs] <- lapply(images[[i]][image_ixs], reposition, xTrf, yTrf)
+    }
   }
   
   p <- list(
