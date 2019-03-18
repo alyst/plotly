@@ -87,11 +87,11 @@ s <- subplot(
 
 test_that("Row/column height/width", {
   l <- expect_traces(s, 3, "width-height")
-  expect_equivalent(diff(l$layout$xaxis$domain), 0.5 - 0.005)
-  expect_equivalent(diff(l$layout$xaxis2$domain), 0.3 - 0.01)
-  expect_equivalent(diff(l$layout$xaxis3$domain), 0.2 - 0.005)
-  expect_equivalent(diff(l$layout$yaxis$domain), 0.4 - 0.005)
-  expect_equivalent(diff(l$layout$yaxis2$domain), 0.6 - 0.005)
+  expect_equivalent(diff(l$layout$xaxis$domain), 0.5*0.98)
+  expect_equivalent(diff(l$layout$xaxis2$domain), 0.3*0.98)
+  expect_equivalent(diff(l$layout$xaxis3$domain), 0.2*0.98)
+  expect_equivalent(diff(l$layout$yaxis$domain), 0.4*0.99)
+  expect_equivalent(diff(l$layout$yaxis2$domain), 0.6*0.99)
 })
 
 test_that("recursive subplots work", {
@@ -471,7 +471,7 @@ test_that("geo+cartesian behaves", {
   l <- expect_traces(s, 9, "geo-cartesian")
   geoDom <- l$layout[[grep("^geo", names(l$layout))]]$domain
   expect_equivalent(geoDom$x, c(0, 1))
-  expect_equivalent(geoDom$y, c(0, 0.68))
+  expect_equivalent(geoDom$y, c(0, 0.7 * (1 - 0.02*2)))
 })
 
 
