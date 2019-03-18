@@ -154,6 +154,7 @@ subplot <- function(..., nrows = 1, widths = NULL, heights = NULL, margin = 0.02
   yAxisN <- vapply(yAxes, length, numeric(1))
   # old -> new axis name dictionary
   ncols <- ceiling(length(plots) / nrows)
+  if (!is.null(widths)) ncols <- max(ncols, length(widths))
   xAxisID <- seq_len(sum(xAxisN))
   if (shareX) {
     if (length(unique(xAxisN)) > 1) {
@@ -355,6 +356,7 @@ get_domains <- function(nplots = 1, nrows = 1, margins = 0.01,
   if (length(margins) == 1) margins <- rep(margins, 4)
   if (length(margins) != 4) stop("margins must be length 1 or 4", call. = FALSE)
   ncols <- ceiling(nplots / nrows)
+  if (!is.null(widths)) ncols <- max(ncols, length(widths))
   widths <- widths %||% rep(1 / ncols, ncols)
   heights <- heights %||% rep(1 / nrows, nrows)
   if (length(widths) != ncols) {
