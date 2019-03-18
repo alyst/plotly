@@ -340,10 +340,6 @@ dots2plots <- function(...) {
 # has been specified in a list of plots (and returning that attribute)
 ensure_one <- function(plots, attr) {
   attrs <- Filter(Negate(is.null), lapply(plots, "[[", attr))
-  if (length(attrs) == 0) {
-    warning("No ", attr, " found", call. = FALSE)
-    return (NULL)
-  }
   for (i in seq_along(attrs)) {
     if (!identical(attrs[[1]], attrs[[i]])) {
       warning("Can only have one: ", attr, call. = FALSE)
